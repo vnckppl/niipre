@@ -9,6 +9,7 @@ niipre works with nifti files and gzipped nifti files. To use niipre, add the sc
 `niipre.py myNiftiImage.nii.gz`
 
 Example output:
-<img src="screenShot.png" width="200">
+
+<img src="screenShot.png" width="400">
 
 niipre has been tested on OSX 10.12.6 and Debian 9.1 (stretch).
