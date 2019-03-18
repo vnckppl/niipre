@@ -1,4 +1,4 @@
-# niipre: A quick preview tool for nifti files1 #
+# niipre: A quick preview tool for nifti files #
 
 niipre was developed as a tool to quickly generate an overview of a nifti image and its header information. It is modeled after the Diffusion Tensor Imaging Toolkit quiclook plugin for OSX. 
 
