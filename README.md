@@ -12,4 +12,4 @@ Example output:
 
 <img src="screenShot.png" width="400">
 
-niipre has been tested on OSX 10.12.6 and Debian 9.1 (stretch).
+niipre has been tested on OSX 10.12.6 and Debian 9.1 (stretch). On testing rendering an image took less than 1.5 seconds on both systems. 
