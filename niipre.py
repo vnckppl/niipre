@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Quick display of a Nifit image
+# Quick display of a Nifti image
 
 # Packages
 import nibabel as nb
