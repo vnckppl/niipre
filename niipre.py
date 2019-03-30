@@ -1,9 +1,6 @@
 #!/usr/bin/python3
-# 2018-10-30
 
-# Vincent Koppelmans
-
-# Read in Nifit image and display
+# Quick display of a Nifit image
 
 # Packages
 import nibabel as nb
@@ -11,20 +8,25 @@ import numpy as np
 import os
 import sys
 from pathlib import Path
-import matplotlib.pyplot
+import matplotlib.pyplot as plt
 
-# Environment
+# Disable Toolbar for plots
+plt.rcParams['toolbar'] = 'None'
+
+# Environment and file names
 home = str(Path.home())
+iFile = sys.argv[1]
+oFile=(str(os.path.basename(iFile).replace('.nii.gz','.png').replace('.nii','.png')))
 
 # Set rounding
 np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
 
-# Load in input file
-iFile = sys.argv[1]
-oFile=(str(os.path.basename(iFile).replace('.nii.gz','.png').replace('.nii','.png')))
+
+
+### IMPORT DATA ###
+# Load data
 image=nb.load(iFile)
 
-# Load data
 # 3D data
 if image.header['dim'][0]==3:
     data=image.get_data()
@@ -37,60 +39,111 @@ header=image.header
     
 # Set NAN to 0
 data[np.isnan(data)] = 0
-    
-# Plot main window
-fig = matplotlib.pyplot.figure(
-    facecolor='black',
-    figsize=(5,4),
-    dpi=200
-)
 
 
-# Set title
-fig.canvas.set_window_title(oFile.replace('.png',''))
-#matplotlib.pyplot.title(oFile.replace('.png',''))
+
+### PREPARE SOME PARAMETERS ###
 
 # Spacing for Aspect Ratio
 sX=header['pixdim'][1]
 sY=header['pixdim'][2]
 sZ=header['pixdim'][3]
 
-# Sagittal
-x=int(data.shape[0]/2)
-a=fig.add_subplot(2,2,1)
-imgplot = matplotlib.pyplot.imshow(
-    np.rot90(data[x,:,:]),
-    aspect=sZ/sY
+# Size per slice
+lX = data.shape[0]
+lY = data.shape[1]
+lZ = data.shape[2]
+
+# Middle slice number
+mX = int(lX/2)
+mY = int(lY/2)
+mZ = int(lZ/2)
+
+# True middle point
+tmX = lX/2.0
+tmY = lY/2.0
+tmZ = lZ/2.0
+
+
+
+### ORIENTATION ###
+qfX = image.get_qform()[0,0]
+sfX = image.get_sform()[0,0]
+
+if qfX < 0 and (sfX == 0 or sfX < 0):
+    oL = 'R'
+    oR = 'L'
+elif qfX > 0 and (sfX == 0 or sfX > 0):
+    oL = 'L'
+    oR = 'R'
+if sfX < 0 and (qfX == 0 or qfX < 0):
+    oL = 'R'
+    oR = 'L'
+elif sfX > 0 and (qfX == 0 or qfX > 0):
+    oL = 'L'
+    oR = 'R'
+
+
+
+### PLOTTING ###
+
+# Plot main window
+fig = plt.figure(
+    facecolor='black',
+    figsize=(5,4),
+    dpi=200
 )
-imgplot.set_cmap('gray')
-matplotlib.pyplot.axis('off')
+
+# Black background
+plt.style.use('dark_background')
+
+# Set title
+fig.canvas.set_window_title(oFile.replace('.png',''))
+
 
 # Coronal
-y=int(data.shape[1]/2)
-a=fig.add_subplot(2,2,2)
-imgplot = matplotlib.pyplot.imshow(
-    np.rot90(data[:,y,:]),
-    aspect=sZ/sX
+ax1=fig.add_subplot(2,2,1)
+imgplot = plt.imshow(
+    np.rot90(data[:,mY,:]),
+    aspect=sZ/sX,
 )
 imgplot.set_cmap('gray')
-matplotlib.pyplot.axis('off')
+
+ax1.hlines(tmZ, 0, lX, colors='red', linestyles='dotted', linewidth=.5)
+ax1.vlines(tmX, 0, lZ, colors='red', linestyles='dotted', linewidth=.5)
+
+plt.axis('off')
+
+
+# Sagittal
+ax2=fig.add_subplot(2,2,2)
+imgplot = plt.imshow(
+    np.rot90(data[mX,:,:]),
+    aspect=sZ/sY,
+)
+imgplot.set_cmap('gray')
+
+ax2.hlines(tmZ, 0, lY, colors='red', linestyles='dotted', linewidth=.5)
+ax2.vlines(tmY, 0, lZ, colors='red', linestyles='dotted', linewidth=.5)
+
+plt.axis('off')
+
 
 # Axial
-z=int(data.shape[2]/2)
-a=fig.add_subplot(2,2,3)
-imgplot = matplotlib.pyplot.imshow(
-    np.rot90(data[:,:,z]),
+ax3=fig.add_subplot(2,2,3)
+imgplot = plt.imshow(
+    np.rot90(data[:,:,mZ]),
     aspect=sY/sX
 )
 imgplot.set_cmap('gray')
-imgplot.axes.get_xaxis().set_ticks([])
-imgplot.axes.get_yaxis().set_ticks([])
-matplotlib.pyplot.ylabel(
-    'R',
-    {'color': 'red', 'fontsize': 10},
-    rotation=0,
-    labelpad = -2
-)
+
+ax3.hlines(tmY, 0, lX, colors='red', linestyles='dotted', linewidth=.5)
+ax3.vlines(tmX, 0, lY, colors='red', linestyles='dotted', linewidth=.5)
+
+plt.axis('off')
+
+plt.text(-10, mY+5, oL, fontsize=9, color='red') # Label on left side
+
 
 # Textual information
 # sform code
@@ -140,8 +193,8 @@ text=(
 )
 
 # Plot text subplot
-a=fig.add_subplot(2,2,4)
-matplotlib.pyplot.text(
+ax4=fig.add_subplot(2,2,4)
+plt.text(
     0.15,
     0.95,
     text,
@@ -150,22 +203,11 @@ matplotlib.pyplot.text(
     size=6,
     color='white',
 )
-matplotlib.pyplot.axis('off')
-
+plt.axis('off')
 
 # Adjust whitespace
-matplotlib.pyplot.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
 
 # Display
-#matplotlib.pyplot.show(block=False)
-matplotlib.pyplot.show()
+plt.show()
 
-
-# Save
-# fig.tight_layout(pad=0)
-# matplotlib.pyplot.savefig(
-#     home+"/"+oFile,
-#     bbox_inches='tight',
-#     facecolor=fig.get_facecolor(),
-#     transparent=True
-# )
