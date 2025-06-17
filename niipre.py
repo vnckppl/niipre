@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-
 # Quick display of a Nifti image
 
-# Packages
+# * Packages
 import nibabel as nb
 import numpy as np
 import os
@@ -10,56 +9,55 @@ import sys
 from pathlib import Path
 import matplotlib.pyplot as plt
 
-# Disable Toolbar for plots
+# * Disable Toolbar for plots
 plt.rcParams['toolbar'] = 'None'
 
-# Environment and file names
+# * Environment and file names
 home = str(Path.home())
 iFile = sys.argv[1]
 oFile=(str(os.path.basename(iFile).replace('.nii.gz','.png').replace('.nii','.png')))
 
-# Set rounding
+# * Set rounding
 np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
 
 
 
 ### IMPORT DATA ###
-# Load data
+# * Load data
 image=nb.load(iFile)
 
-# 3D data
+# * 3D data
 if image.header['dim'][0]==3:
-    data=image.get_data()
-    # 4D data
+    data=image.get_fdata()
+    # * 4D data
 elif  image.header['dim'][0]==4:
-    data=image.get_data()[:,:,:,0]
+    data=image.get_fdata()[:,:,:,0]
 
-# Header
+# * Header
 header=image.header
-    
-# Set NAN to 0
+
+# * Set NAN to 0
 data[np.isnan(data)] = 0
 
 
 
 ### PREPARE SOME PARAMETERS ###
-
-# Spacing for Aspect Ratio
+# * Spacing for Aspect Ratio
 sX=header['pixdim'][1]
 sY=header['pixdim'][2]
 sZ=header['pixdim'][3]
 
-# Size per slice
+# * Size per slice
 lX = data.shape[0]
 lY = data.shape[1]
 lZ = data.shape[2]
 
-# Middle slice number
+# * Middle slice number
 mX = int(lX/2)
 mY = int(lY/2)
 mZ = int(lZ/2)
 
-# True middle point
+# * True middle point
 tmX = lX/2.0
 tmY = lY/2.0
 tmZ = lZ/2.0
@@ -86,22 +84,26 @@ elif sfX > 0 and (qfX == 0 or qfX > 0):
 
 
 ### PLOTTING ###
-
-# Plot main window
+# * Plot main window
 fig = plt.figure(
     facecolor='black',
     figsize=(5,4),
     dpi=200
 )
 
-# Black background
+# * Black background
 plt.style.use('dark_background')
 
-# Set title
-fig.canvas.set_window_title(oFile.replace('.png',''))
+# * Set title
+# ** As window title
+fig.canvas.manager.set_window_title(oFile.replace('.png',''))
+
+# ** Inside image
+fig.suptitle(oFile.replace('.png',''))
 
 
-# Coronal
+
+# * Coronal
 ax1=fig.add_subplot(2,2,1)
 imgplot = plt.imshow(
     np.rot90(data[:,mY,:]),
@@ -115,7 +117,7 @@ ax1.vlines(tmX, 0, lZ, colors='red', linestyles='dotted', linewidth=.5)
 plt.axis('off')
 
 
-# Sagittal
+# * Sagittal
 ax2=fig.add_subplot(2,2,2)
 imgplot = plt.imshow(
     np.rot90(data[mX,:,:]),
@@ -129,7 +131,7 @@ ax2.vlines(tmY, 0, lZ, colors='red', linestyles='dotted', linewidth=.5)
 plt.axis('off')
 
 
-# Axial
+# * Axial
 ax3=fig.add_subplot(2,2,3)
 imgplot = plt.imshow(
     np.rot90(data[:,:,mZ]),
@@ -145,20 +147,20 @@ plt.axis('off')
 plt.text(-10, mY+5, oL, fontsize=9, color='red') # Label on left side
 
 
-# Textual information
-# sform code
+# * Textual information
+# ** sform code
 sform=np.round(image.get_sform(),decimals=2)
 sform_txt=str(sform).replace('[',' ').replace(']',' ').replace(' ','   ').replace('   -','  -')
 
-# qform code
+# ** qform code
 qform=np.round(image.get_qform(),decimals=2)
 qform_txt=str(qform).replace('[',' ').replace(']',' ').replace(' ','   ').replace('   -','  -')
 
-# Dimensions
+# ** Dimensions
 dims=str(data.shape).replace(', ',' x ').replace('(','').replace(')','')
 dim=("Dimensions: "+dims)
 
-# Spacing
+# ** Spacing
 spacing=("Spacing: "
          +str(np.round(sX, decimals=2))
          +" x "
@@ -168,14 +170,14 @@ spacing=("Spacing: "
          +" mm"
 )
 
-# Data type
+# ** Data type
 type=image.header.get_data_dtype()
 type_str=("Data type: "+str(type))
 
-# Volumes
+# ** Volumes
 volumes=("Volumes: "+str(image.header['dim'][4]))
 
-# Range
+# ** Range
 min=np.round(np.amin(data), decimals=2)
 max=np.round(np.amax(data), decimals=2)
 range=("Range: "+str(min)+" - "+str(max))
@@ -192,7 +194,7 @@ text=(
     +qform_txt
 )
 
-# Plot text subplot
+# * Plot text subplot
 ax4=fig.add_subplot(2,2,4)
 plt.text(
     0.15,
@@ -205,9 +207,8 @@ plt.text(
 )
 plt.axis('off')
 
-# Adjust whitespace
+# * Adjust whitespace
 plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
 
-# Display
+# * Display
 plt.show()
-

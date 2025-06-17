@@ -1,2 +1,6 @@
+OLD/
 .DS_Store
-OLD
+.gitignore
+niipre.org
+requirements.txt
+venv_dir.log
